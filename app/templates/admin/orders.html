@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Order History - Admin Portal{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-200 pb-4">
+    <div>
+      <h1 class="text-2xl font-black text-gray-900 tracking-tight">Order Management</h1>
+      <p class="text-xs text-gray-500 mt-0.5">Track customer orders, Bakong KHQR payment statuses, and fulfillment</p>
+    </div>
+  </div>
+
+  <!-- Status Filter Pills -->
+  <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+    <a
+      href="{{ url_for('admin.orders') }}"
+      class="px-3.5 py-1.5 rounded-xl font-bold transition {% if not status_filter %}bg-gray-900 text-white shadow-xs{% else %}bg-white border border-gray-200 text-gray-600 hover:bg-gray-50{% endif %}"
+    >
+      All Orders
+    </a>
+    <a
+      href="{{ url_for('admin.orders', status='PAID') }}"
+      class="px-3.5 py-1.5 rounded-xl font-bold transition {% if status_filter == 'PAID' %}bg-emerald-600 text-white shadow-xs{% else %}bg-white border border-gray-200 text-gray-600 hover:bg-gray-50{% endif %}"
+    >
+      Paid
+    </a>
+    <a
+      href="{{ url_for('admin.orders', status='UNPAID') }}"
+      class="px-3.5 py-1.5 rounded-xl font-bold transition {% if status_filter == 'UNPAID' %}bg-amber-500 text-white shadow-xs{% else %}bg-white border border-gray-200 text-gray-600 hover:bg-gray-50{% endif %}"
+    >
+      Unpaid
+    </a>
+    <a
+      href="{{ url_for('admin.orders', status='EXPIRED') }}"
+      class="px-3.5 py-1.5 rounded-xl font-bold transition {% if status_filter == 'EXPIRED' %}bg-rose-600 text-white shadow-xs{% else %}bg-white border border-gray-200 text-gray-600 hover:bg-gray-50{% endif %}"
+    >
+      Expired
+    </a>
+  </div>
+
+  <!-- Orders Table -->
+  <div class="bg-white rounded-3xl border border-gray-200/80 shadow-xs overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead class="bg-gray-50/80 border-b border-gray-200 text-gray-500 font-bold uppercase tracking-wider">
+          <tr>
+            <th class="py-3.5 px-4">Order Code</th>
+            <th class="py-3.5 px-4">Date</th>
+            <th class="py-3.5 px-4">Customer</th>
+            <th class="py-3.5 px-4">Total</th>
+            <th class="py-3.5 px-4">Status</th>
+            <th class="py-3.5 px-4">Payer Bank</th>
+            <th class="py-3.5 px-4 text-right">Action</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          {% for order in orders %}
+            <tr class="hover:bg-gray-50/60 transition">
+              <td class="py-3.5 px-4 font-mono font-bold text-gray-900">
+                <a href="{{ url_for('admin.order_detail', id=order.id) }}" class="hover:text-red-600">
+                  {{ order.order_code }}
+                </a>
+              </td>
+              <td class="py-3.5 px-4 text-gray-500">
+                {{ order.created_at|format_date }}
+              </td>
+              <td class="py-3.5 px-4">
+                <span class="font-bold text-gray-900 block">{{ order.customer_name }}</span>
+                <span class="text-gray-400 text-[11px]">{{ order.customer_phone }}</span>
+              </td>
+              <td class="py-3.5 px-4 font-black text-gray-900 text-sm">
+                {{ order.total_amount|currency(order.currency) }}
+              </td>
+              <td class="py-3.5 px-4">
+                {% if order.payment_status == 'PAID' %}
+                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-emerald-800 bg-emerald-100">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    PAID
+                  </span>
+                {% elif order.payment_status == 'UNPAID' %}
+                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-amber-800 bg-amber-100">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                    UNPAID
+                  </span>
+                {% else %}
+                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-rose-800 bg-rose-100">
+                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                    {{ order.payment_status }}
+                  </span>
+                {% endif %}
+              </td>
+              <td class="py-3.5 px-4 text-gray-600">
+                {{ order.payer_bank or '—' }}
+              </td>
+              <td class="py-3.5 px-4 text-right">
+                <a
+                  href="{{ url_for('admin.order_detail', id=order.id) }}"
+                  class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold px-3 py-1 rounded-lg transition"
+                >
+                  View Details
+                </a>
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="7" class="py-12 text-center text-gray-400">
+                No orders found.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

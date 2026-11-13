@@ -1,0 +1,10 @@
+venv/
+__pycache__/
+*.pyc
+.env
+.env.local
+*.db
+*.sqlite3
+node_modules/
+app/static/css/output.css.map
+tailwindcss.exe

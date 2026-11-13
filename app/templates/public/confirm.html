@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Order Confirmation - {{ order.order_code }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+
+  <!-- Success Card Header -->
+  <div class="bg-white rounded-3xl border border-gray-200/80 shadow-xs p-6 sm:p-10 text-center space-y-4">
+    
+    <div class="w-20 h-20 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-inner">
+      <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+      </svg>
+    </div>
+
+    <div>
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 rounded-full">
+        Payment Settled Successfully
+      </span>
+      <h1 class="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight mt-2">
+        Thank You for Your Order!
+      </h1>
+      <p class="text-xs sm:text-sm text-gray-500 mt-1">
+        Your payment has been verified via the NBC Bakong network. Your order is now being processed for delivery.
+      </p>
+    </div>
+
+    <!-- Order Code Pill -->
+    <div class="p-4 bg-gray-50 border border-gray-100 rounded-2xl inline-block max-w-sm w-full">
+      <span class="text-xs text-gray-400 uppercase font-semibold block">Order Reference</span>
+      <span class="font-mono text-base font-bold text-gray-900">{{ order.order_code }}</span>
+      <div class="mt-1 flex items-center justify-center gap-2 text-xs text-gray-500">
+        <span>Date: {{ order.created_at|format_date }}</span>
+        <span>&bull;</span>
+        <span class="font-semibold text-emerald-600">{{ order.payment_status }}</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Order Details & Shipping Information -->
+  <div class="bg-white rounded-3xl border border-gray-200/80 shadow-xs p-6 sm:p-8 space-y-6">
+    
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 pb-6 border-b border-gray-100 text-xs">
+      <div>
+        <h3 class="font-bold text-gray-900 uppercase tracking-wider mb-2">Customer Details</h3>
+        <p class="font-semibold text-gray-800 text-sm">{{ order.customer_name }}</p>
+        <p class="text-gray-500 mt-0.5">{{ order.customer_email }}</p>
+        <p class="text-gray-500">{{ order.customer_phone }}</p>
+      </div>
+
+      <div>
+        <h3 class="font-bold text-gray-900 uppercase tracking-wider mb-2">Delivery Address</h3>
+        <p class="text-gray-700 whitespace-pre-line leading-relaxed">{{ order.shipping_address }}</p>
+      </div>
+    </div>
+
+    <!-- Items Table -->
+    <div>
+      <h3 class="font-bold text-gray-900 uppercase tracking-wider text-xs mb-3">Order Items</h3>
+      <div class="divide-y divide-gray-100">
+        {% for item in order.items %}
+          <div class="py-3 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <img
+                src="{{ item.product.display_image if item.product else 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600' }}"
+                alt="{{ item.product.name if item.product else 'Product' }}"
+                class="w-12 h-12 rounded-xl object-cover bg-gray-100 border border-gray-100 shrink-0"
+              >
+              <div>
+                <p class="text-sm font-bold text-gray-900">{{ item.product.name if item.product else 'Product' }}</p>
+                <p class="text-xs text-gray-500">
+                  Qty: <span class="font-semibold text-gray-700">{{ item.quantity }}</span> &times; {{ item.unit_price|currency }}
+                </p>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="text-sm font-bold text-gray-900">{{ item.subtotal|currency }}</span>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Order Financials -->
+    <div class="pt-4 border-t border-gray-100 space-y-2 text-xs">
+      <div class="flex justify-between text-gray-500">
+        <span>Subtotal</span>
+        <span class="font-semibold text-gray-800">{{ order.total_amount|currency }}</span>
+      </div>
+      <div class="flex justify-between text-gray-500">
+        <span>Delivery Fee</span>
+        <span class="font-semibold text-emerald-600">Free</span>
+      </div>
+      {% if order.payer_bank %}
+        <div class="flex justify-between text-gray-500">
+          <span>Payer Bank</span>
+          <span class="font-semibold text-gray-800">{{ order.payer_bank }}</span>
+        </div>
+      {% endif %}
+      <div class="border-t border-gray-100 pt-3 flex justify-between items-baseline">
+        <span class="text-sm font-bold text-gray-900">Total Paid</span>
+        <span class="text-2xl font-black text-gray-900">{{ order.total_amount|currency }}</span>
+      </div>
+    </div>
+
+    <!-- Return Action -->
+    <div class="pt-4 text-center">
+      <a
+        href="{{ url_for('public.index') }}"
+        class="inline-flex items-center justify-center gap-2 bg-gray-900 hover:bg-black text-white font-bold py-3 px-6 rounded-2xl transition shadow-xs text-sm"
+      >
+        <span>Return to Storefront</span>
+        &rarr;
+      </a>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

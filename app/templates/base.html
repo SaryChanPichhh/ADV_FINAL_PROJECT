@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-gray-50">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}MyShop Cambodia{% endblock %} - Flask + Tailwind + KHQR</title>
+  {% block extra_head %}{% endblock %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
+</head>
+<body class="flex flex-col min-h-full text-gray-800 antialiased">
+
+  <!-- Header / Navigation -->
+  <header class="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 gap-4">
+        
+        <!-- Brand Logo -->
+        <div class="flex items-center gap-3">
+          <a href="{{ url_for('public.index') }}" class="flex items-center gap-2 group">
+            <span class="w-10 h-10 rounded-xl bg-gradient-to-tr from-red-600 to-rose-500 text-white flex items-center justify-center font-black text-xl shadow-md group-hover:scale-105 transition-transform">
+              K
+            </span>
+            <div class="flex flex-col">
+              <span class="font-extrabold text-lg sm:text-xl tracking-tight text-gray-900 leading-none">
+                MyShop<span class="text-red-600">.kh</span>
+              </span>
+              <span class="text-[10px] font-medium text-gray-500 tracking-wider uppercase">KHQR Store</span>
+            </div>
+          </a>
+        </div>
+
+        <!-- Global Search Form (Pure HTML GET) -->
+        <div class="hidden md:flex flex-1 max-w-md mx-4">
+          <form action="{{ url_for('public.index') }}" method="GET" class="w-full flex items-center">
+            <div class="relative w-full">
+              <input
+                type="text"
+                name="q"
+                value="{{ request.args.get('q', '') }}"
+                placeholder="Search products by name or keyword..."
+                class="w-full pl-10 pr-4 py-2 text-sm bg-gray-100 border border-transparent rounded-full focus:bg-white focus:border-red-500 focus:outline-hidden transition"
+              >
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+              </div>
+            </div>
+            <button type="submit" class="sr-only">Search</button>
+          </form>
+        </div>
+
+        <!-- Navigation Right (Cart Badge & Admin Links) -->
+        <div class="flex items-center gap-3 sm:gap-4">
+          
+          <!-- Shopping Cart Pill with Server-Side Badge -->
+          <a href="{{ url_for('public.cart') }}"
+             class="relative inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full transition">
+            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+            </svg>
+            <span class="hidden sm:inline">Cart</span>
+            {% if cart_count > 0 %}
+              <span class="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                {{ cart_count }}
+              </span>
+            {% else %}
+              <span class="inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-semibold leading-none text-gray-500 bg-gray-200 rounded-full">
+                0
+              </span>
+            {% endif %}
+          </a>
+
+          <!-- Admin Portal Links -->
+          {% if current_user.is_authenticated %}
+            <div class="flex items-center gap-2 border-l border-gray-200 pl-3">
+              <a href="{{ url_for('admin.products') }}"
+                 class="text-xs sm:text-sm font-semibold text-gray-700 hover:text-red-600 px-2 py-1 rounded-md transition">
+                Products
+              </a>
+              <a href="{{ url_for('admin.orders') }}"
+                 class="text-xs sm:text-sm font-semibold text-gray-700 hover:text-red-600 px-2 py-1 rounded-md transition">
+                Orders
+              </a>
+              <form action="{{ url_for('admin.logout') }}" method="POST" class="inline">
+                <button type="submit"
+                        class="text-xs font-semibold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-2.5 py-1.5 rounded-lg transition">
+                  Logout
+                </button>
+              </form>
+            </div>
+          {% else %}
+            <a href="{{ url_for('admin.login') }}"
+               class="text-xs sm:text-sm font-medium text-gray-500 hover:text-gray-900 px-2 py-1 transition">
+              Admin
+            </a>
+          {% endif %}
+        </div>
+
+      </div>
+
+      <!-- Mobile Search Form -->
+      <div class="md:hidden pb-3">
+        <form action="{{ url_for('public.index') }}" method="GET" class="w-full flex items-center">
+          <div class="relative w-full">
+            <input
+              type="text"
+              name="q"
+              value="{{ request.args.get('q', '') }}"
+              placeholder="Search products..."
+              class="w-full pl-9 pr-3 py-1.5 text-sm bg-gray-100 border border-transparent rounded-lg focus:bg-white focus:border-red-500 focus:outline-hidden"
+            >
+            <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-gray-400">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Flash Messages Banner (Zero JS) -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 w-full">
+        {% for category, message in messages %}
+          {% set bg_color = 'bg-blue-50 border-blue-200 text-blue-800' %}
+          {% if category == 'success' %}
+            {% set bg_color = 'bg-emerald-50 border-emerald-200 text-emerald-800' %}
+          {% elif category == 'error' %}
+            {% set bg_color = 'bg-rose-50 border-rose-200 text-rose-800' %}
+          {% elif category == 'warning' %}
+            {% set bg_color = 'bg-amber-50 border-amber-200 text-amber-800' %}
+          {% endif %}
+          <div class="flex items-center justify-between p-3.5 mb-2 text-sm border rounded-xl shadow-xs {{ bg_color }}">
+            <div class="flex items-center gap-2">
+              {% if category == 'success' %}
+                <svg class="w-5 h-5 shrink-0 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+              {% elif category == 'error' %}
+                <svg class="w-5 h-5 shrink-0 text-rose-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                </svg>
+              {% else %}
+                <svg class="w-5 h-5 shrink-0 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                </svg>
+              {% endif %}
+              <span class="font-medium">{{ message }}</span>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Main Content Area -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-gray-200 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-gray-500">
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-gray-900">MyShop.kh</span>
+          <span>&copy; {{ current_year }} ADV PP Final Project.</span>
+          <span class="text-gray-400">|</span>
+          <span>100% Server-Side Rendered (Zero JavaScript)</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <span class="inline-flex items-center gap-1.5 text-red-600 font-semibold bg-red-50 px-2.5 py-1 rounded-full">
+            <span class="w-2 h-2 rounded-full bg-red-600"></span>
+            Bakong KHQR Integrated
+          </span>
+          <span>Cloudflare R2 Storage</span>
+          <span>PostgreSQL ORM</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

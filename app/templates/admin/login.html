@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Login - MyShop Cambodia{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto py-8">
+  <div class="bg-white rounded-3xl border border-gray-200/80 shadow-lg p-8 sm:p-10 space-y-6">
+    
+    <div class="text-center space-y-2">
+      <div class="w-12 h-12 mx-auto rounded-2xl bg-red-50 text-red-600 flex items-center justify-center font-black text-xl">
+        A
+      </div>
+      <h1 class="text-2xl font-black text-gray-900 tracking-tight">Admin Portal</h1>
+      <p class="text-xs text-gray-500">Log in to manage products, inventory, and order history</p>
+    </div>
+
+    <!-- Login Form (Pure HTML POST) -->
+    <form action="{{ url_for('admin.login', next=request.args.get('next')) }}" method="POST" class="space-y-4">
+      
+      <div>
+        <label for="username" class="block text-xs font-bold text-gray-700 uppercase mb-1">
+          Username
+        </label>
+        <input
+          type="text"
+          id="username"
+          name="username"
+          required
+          autofocus
+          placeholder="admin"
+          class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:border-red-500 focus:outline-hidden transition"
+        >
+      </div>
+
+      <div>
+        <label for="password" class="block text-xs font-bold text-gray-700 uppercase mb-1">
+          Password
+        </label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          required
+          placeholder="••••••••"
+          class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:border-red-500 focus:outline-hidden transition"
+        >
+      </div>
+
+      <div class="pt-2">
+        <button
+          type="submit"
+          class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-xl shadow-md hover:shadow-lg transition text-sm"
+        >
+          Sign In as Admin
+        </button>
+      </div>
+
+    </form>
+
+    <div class="text-center pt-2 border-t border-gray-100">
+      <p class="text-[11px] text-gray-400">
+        Default Seed Credentials: <span class="font-mono text-gray-600 font-semibold">admin</span> / <span class="font-mono text-gray-600 font-semibold">admin123</span>
+      </p>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

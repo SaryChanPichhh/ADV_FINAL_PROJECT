@@ -1,0 +1,10 @@
+flask
+flask-sqlalchemy
+flask-migrate
+flask-login
+python-dotenv
+psycopg2-binary
+boto3
+bakong-khqr
+pillow
+qrcode
