@@ -1,3 +1,4 @@
+import os
 import uuid
 from datetime import datetime
 from flask import (
@@ -9,13 +10,41 @@ from flask import (
     session,
     flash,
     current_app,
+    Response,
+    send_file,
 )
 from app import db
 from app.models import Product, Order, OrderItem
 from app.services.khqr_service import KHQRService
+from app.services.r2_service import R2Service
 
 public_bp = Blueprint("public", __name__)
 khqr_service = KHQRService()
+
+
+@public_bp.route("/media/<path:key>")
+def serve_media(key):
+    r2 = R2Service()
+    if r2.is_configured and r2.s3_client:
+        try:
+            s3_obj = r2.s3_client.get_object(Bucket=r2.bucket_name, Key=key)
+            content_type = s3_obj.get("ContentType") or "image/jpeg"
+            body = s3_obj["Body"].read()
+            resp = Response(body, mimetype=content_type)
+            resp.headers["Cache-Control"] = "public, max-age=604800, immutable"
+            return resp
+        except Exception:
+            pass
+
+    # Local fallback
+    upload_folder = current_app.config.get("UPLOAD_FOLDER") or os.path.join(current_app.root_path, "static", "uploads")
+    filename = key.split("/")[-1]
+    local_path = os.path.join(upload_folder, filename)
+    if os.path.exists(local_path):
+        return send_file(local_path)
+
+    return redirect("https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80")
+
 
 
 @public_bp.route("/")
@@ -260,20 +289,43 @@ def checkout():
     )
 
 
-@public_bp.route("/checkout/pay/<string:order_code>")
+@public_bp.route("/checkout/pay/<string:order_code>", methods=["GET", "POST"])
 def checkout_pay(order_code):
     order = Order.query.filter_by(order_code=order_code).first_or_404()
 
     if order.payment_status == "PAID":
         return redirect(url_for("public.order_confirmation", order_code=order.order_code))
 
-    # Check Bakong Open API on every page load / 3-second meta refresh
-    verification = khqr_service.verify_payment(order.khqr_md5)
-    if verification.get("status") == "PAID":
-        _complete_order_payment(order, verification.get("details"))
-        return redirect(url_for("public.order_confirmation", order_code=order.order_code))
+    # 1. Check if user submitted a transaction hash or short hash (e.g. from receipt)
+    hash_query = (request.form.get("hash") or request.args.get("hash") or "").strip()
+    if hash_query:
+        res = None
+        if len(hash_query) <= 12:
+            res = khqr_service.verify_by_short_hash(hash_query, float(order.total_amount), order.currency)
+        if not res or res.get("status") != "PAID":
+            res = khqr_service.verify_by_hash(hash_query)
+
+        if res and res.get("status") == "PAID":
+            tx = res.get("details", {})
+            bank_name = tx.get("fromAccountId") or tx.get("senderAccount") or "Bakong Member Bank"
+            _complete_order_payment(order, {"bank": bank_name, "raw": tx})
+            flash("Payment successfully verified with Bakong Open API!", "success")
+            return redirect(url_for("public.order_confirmation", order_code=order.order_code))
+        else:
+            flash(f"Transaction with hash '{hash_query}' could not be verified on Bakong yet. Please check and try again.", "error")
+
+    # 2. Check Bakong Open API using the QR's MD5 hash (auto-check)
+    if order.khqr_md5:
+        verification = khqr_service.verify_payment(order.khqr_md5)
+        if verification.get("status") == "PAID":
+            _complete_order_payment(order, verification.get("details"))
+            return redirect(url_for("public.order_confirmation", order_code=order.order_code))
 
     qr_data = khqr_service.generate_order_qr(float(order.total_amount), order.order_code)
+    if not order.khqr_md5 or order.khqr_md5 != qr_data["md5"]:
+        order.khqr_md5 = qr_data["md5"]
+        db.session.commit()
+
     return render_template(
         "public/checkout_qr.html",
         order=order,

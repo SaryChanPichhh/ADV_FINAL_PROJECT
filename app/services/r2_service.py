@@ -61,7 +61,10 @@ class R2Service:
                     "CacheControl": "public, max-age=31536000",
                 },
             )
-            image_url = f"{self.public_url}/{object_key}" if self.public_url else f"/{object_key}"
+            if self.public_url and not self.public_url.endswith(".r2.cloudflarestorage.com"):
+                image_url = f"{self.public_url}/{object_key}"
+            else:
+                image_url = f"/media/{object_key}"
             return {
                 "image_url": image_url,
                 "image_key": object_key,

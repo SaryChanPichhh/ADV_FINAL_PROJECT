@@ -22,17 +22,20 @@ def create_app(config_override=None):
 
     db_url = os.getenv("DATABASE_URL", "")
     if db_url.startswith("postgres://"):
-        db_url = db_url.replace("postgres://", "postgresql://", 1)
+        db_url = db_url.replace("postgres://", "postgresql+psycopg2://", 1)
+    elif db_url.startswith("postgresql://") and not db_url.startswith("postgresql+"):
+        db_url = db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
 
     if not db_url:
         # Fallback to local SQLite if no PostgreSQL URL is configured
         base_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
-        db_url = f"sqlite:///{os.path.join(base_dir, 'myshop.db')}"
+        db_path = os.path.join(base_dir, "myshop.db").replace("\\", "/")
+        db_url = f"sqlite:///{db_path}"
 
     app.config["SQLALCHEMY_DATABASE_URI"] = db_url
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-    if db_url.startswith("postgresql://"):
+    if db_url.startswith("postgresql"):
         app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
             "pool_pre_ping": True,
             "pool_recycle": 300,

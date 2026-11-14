@@ -44,6 +44,8 @@ class Product(db.Model):
 
     @property
     def display_image(self) -> str:
+        if self.image_key and not self.image_key.startswith("local:"):
+            return f"/media/{self.image_key}"
         if self.image_url:
             return self.image_url
         return "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80"
