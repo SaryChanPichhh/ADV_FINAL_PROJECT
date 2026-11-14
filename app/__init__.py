@@ -101,3 +101,8 @@ def create_app(config_override=None):
     app.register_blueprint(admin_bp, url_prefix="/admin")
 
     return app
+
+
+# Application instance for WSGI deployment (e.g. Render 'gunicorn app:app')
+app = create_app()
+
